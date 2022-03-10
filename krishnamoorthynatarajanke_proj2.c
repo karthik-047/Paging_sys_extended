@@ -114,6 +114,7 @@ void second(int f_size){
 	int ref_bit[RAND_LIMIT];
 	int memory_blk[f_size][ITERATIONS+1];
 	int fault_second[ITERATIONS];
+	time_t now;
 	for(i=0;i<f_size;i++)
   	    for(j=0;j<(ITERATIONS+1);j++)
 		    memory_blk[i][j] = -1;
@@ -143,8 +144,9 @@ void second(int f_size){
 	}
 	fprintf(fpw,"\t\tPolicy: Second Chance | Frame Size:  %d\n\n",f_size);
  	for(i=0;i<ITERATIONS;i++){
+		time(&now);
 		fscanf(fpr,"%d,",&load);
-        printf("\n Loaded page at %d iteration: %d",(i+1),load);
+        printf("\n Page %d referenced at time %s",load,ctime(&now));
 		for(j=0;j<f_size;j++){
 			age_ind = memory_blk[j][i];
 			//printf("\n Value of age_index: %d",age_ind);
@@ -187,9 +189,9 @@ void second(int f_size){
 				}
 		}
 	if(fault_second[i]==0)
-			fprintf(fpw,"Page referenced: %d | No page fault\n",load);
+			fprintf(fpw,"Page referenced: %d at %s | No page fault\n",load,ctime(&now));
 		else
-			fprintf(fpw,"Page referenced: %d | Page fault occured\n",load);
+			fprintf(fpw,"Page referenced: %d at %s | Page fault occured\n",load, ctime(&now));
 	}
 	fclose(fpr);
 	printf("\n Total number of page faults: %d",s_fault_count);
@@ -204,6 +206,7 @@ void fifo(int f_size){
 	int memory_blk[f_size][ITERATIONS+1];
     int age[RAND_LIMIT];
 	int fault_fifo[ITERATIONS];
+	time_t now;
     for(i=0;i<RAND_LIMIT;i++)
         age[i] = 0;
     for(i=0;i<f_size;i++)
@@ -231,8 +234,9 @@ void fifo(int f_size){
 	}
 	fprintf(fpw,"\t\tPolicy: FIFO | Frame Size:  %d\n\n",f_size);		
     for(i=0;i<ITERATIONS;i++){
+		time(&now);
         fscanf(fpr,"%d,",&load);
-        printf("\n Loaded page at %d iteration: %d",(i+1),load);
+        printf("\n Page %d referenced at time %s",load,ctime(&now));
 		for(j=0;j<f_size;j++){
 			age_ind = memory_blk[j][i];
 			//printf("\n Value of age_index: %d",age_ind);
@@ -271,9 +275,9 @@ void fifo(int f_size){
 
 		}
 		if(fault_fifo[i]==0)
-			fprintf(fpw,"Page referenced: %d | No page fault\n",load);
+			fprintf(fpw,"Page referenced: %d at %s | No page fault\n",load,ctime(&now));
 		else
-			fprintf(fpw,"Page referenced: %d | Page fault occured\n",load);
+			fprintf(fpw,"Page referenced: %d at %s | Page fault occured\n",load,ctime(&now));
 	}
 	fclose(fpr);
 	printf("\n Total number of page faults: %d",f_fault_count);
@@ -286,6 +290,7 @@ void lru(int f_size){
 	int load,a,b,i=0,j=0,mem_loc, hit,hit_ind,load_ind,mem_ind,l_fault_count=0;
 	int memory_blk[f_size][ITERATIONS+1];
 	int fault_lru[ITERATIONS];
+	time_t now;
     for(i=0;i<f_size;i++)
   	    for(j=0;j<(ITERATIONS+1);j++)
 		    memory_blk[i][j] = -1;
@@ -311,8 +316,9 @@ void lru(int f_size){
 	}
 	fprintf(fpw,"\t\tPolicy: LRU | Frame Size:  %d\n\n",f_size);	
 	for(i=0;i<ITERATIONS;i++){
+		time(&now);
 		fscanf(fpr,"%d,",&load);
-		printf("\n Loaded page at %d iteration: %d",(i+1),load);
+		printf("\n Page %d referenced at time %s",load,ctime(&now));
 		hit = check_cache(memory_blk,i,f_size,load);
 		if(hit==1){
 			printf("\n Cache hit");
@@ -340,9 +346,9 @@ void lru(int f_size){
 			memory_blk[0][i+1] = load;
 		}
 		if(fault_lru[i]==0)
-			fprintf(fpw,"Page referenced: %d | No page fault\n",load);
+			fprintf(fpw,"Page referenced: %d at %s| No page fault\n",load,ctime(&now));
 		else
-			fprintf(fpw,"Page referenced: %d | Page fault occured\n",load);
+			fprintf(fpw,"Page referenced: %d at %s| Page fault occured\n",load,ctime(&now));
 	}
 	fclose(fpr);
 	printf("\n Total number of page faults: %d",l_fault_count);
@@ -354,15 +360,6 @@ int main(void){
   int i,j;
   time_t t;
   srand((unsigned) time(&t));
-  printf("\n Enter the replacement policy choice:");
-  printf("\n \t1.FIFO \n \t2.LRU \n \t3.Second Chance");
-  scanf("%d",&alg_choice);
-  printf("\n Enter the number of page frames [4 or 8]:");
-  scanf("%d",&frame_choice);
-  if((frame_choice!=4)&&(frame_choice!=8)){
-	  printf("\n Only 4 and 8 are the valid choices");
-	  exit(EXIT_FAILURE);
-  }
   FILE *fp;
   fp = fopen(ip_file,"w");
   if(fp==NULL){
@@ -374,18 +371,34 @@ int main(void){
         fprintf(fp,"%d,",rand_string);
   }
   fclose(fp);
-  switch(alg_choice){
-		case 1: printf("\n \t\tImplementing FIFO\n");
-				fifo(frame_choice);
-		break;
-		case 2: printf("\n \t\tImplementing LRU\n");
-    			lru(frame_choice);
-		break;
-	  	case 3: printf("\n \t\tImplementing Second Chance\n");
-			  	second(frame_choice);
-	 	break;
-	  default:printf("\n Invalid entry. Please enter a number in range [1,3]\n");
-	  exit(0);
-  }    
+  while(1){
+	printf("\n Enter the replacement policy choice:");
+	printf("\n \t1.FIFO \n \t2.LRU \n \t3.Second Chance\n \t4.Exit\n \t");
+	scanf("%d",&alg_choice);
+	if(alg_choice!=4){
+		printf("\n Enter the number of page frames [4 or 8]:");
+		scanf("%d",&frame_choice);	
+		if((frame_choice!=4)&&(frame_choice!=8)){
+			printf("\n Only 4 and 8 are the valid choices");
+			exit(EXIT_FAILURE);
+		}
+	}
+	switch(alg_choice){
+			case 1: printf("\n \t\tImplementing FIFO\n");
+					fifo(frame_choice);
+			break;
+			case 2: printf("\n \t\tImplementing LRU\n");
+					lru(frame_choice);
+			break;
+			case 3: printf("\n \t\tImplementing Second Chance\n");
+					second(frame_choice);
+			break;
+			case 4: printf("\n \t\tExiting...\n");
+		  		  	exit(EXIT_SUCCESS);
+			break;
+		default:printf("\n Invalid entry. Please enter a number in range [1,4]\n");
+		exit(0);
+	}
+}    
   return 0;
 }

@@ -7,20 +7,22 @@
 
 #define ITERATIONS 100
 #define RAND_LIMIT 16
+const char file_4[] = "krishnamoorthynatarajanke_proj2_output_4frames.txt";
+const char file_8[] = "krishnamoorthynatarajanke_proj2_output_8frames.txt";
+const char ip_file[] = "krishnamoorthynatarajanke_proj2_input.txt";
 
 void fifo(int);
-int check_cache(int);
-/*int ref_string[24];
-//={0,2,1,3,5,4,6,3,7,4,7,3,3,5,5,3,1,1,1,7,2,3,4,1};
-int mem[8][25];
-int fault[24];
-int ref_bit[8];
+void lru(int);
+int check_cache(int mem[][ITERATIONS+1], int,int,int);
+int load_init(int mem[][ITERATIONS+1], int,int,int);
+int ret_max(int mem[][ITERATIONS+1], int age[],int,int);
 
+/*
 void second();
-void lru();
+
 
 int fetch_mem(int);
-int load_init(int);
+
 int hit_loc(int);
 int check_2mem(int);
 int ret_max(int age[],int);
@@ -81,25 +83,25 @@ void push_2mem(int mem_ind,int index){
 		mem[7][index+1] = mem[mem_ind][index];
 		}
 }
-
-int ret_max(int age[],int index){
-	int max=0,ind,i;
-	for(i=0;i<8;i++){
+*/
+int ret_max(int mem[][ITERATIONS+1],int age[],int index,int fsize){
+	int max=0,ind=0,i;
+	for(i=0;i<RAND_LIMIT;i++){
 		if(age[i]>max){
 			max = age[i];
 			ind = i;
 		}
 	}
 	//printf("\n Oldest page is %d with age %d",ind,max);
-	for(i=0;i<4;i++){
+	for(i=0;i<fsize;i++){
 		if(ind==mem[i][index]){
 			ind = i;
 		}
 	}
 	//printf("\n Oldest page present at ind %d",ind);
-	return ind;
-	
+	return ind;	
 }
+/*
 int check_2mem(int index){
 		int i,loc=0;
 		for(i=4;i<8;i++){			
@@ -122,13 +124,13 @@ int hit_loc(int index){
 	}
 	return loc;
 }
-
+*/
 //check for space in cache and return index
-int load_init(int index)
+int load_init(int mem[][ITERATIONS+1],int index,int fsize,int curr_page)
 {
-	int i,loc=0;
-	for(i=0;i<4;i++){
-		if(mem[i][index]==9){
+	int i,loc=-1;
+	for(i=0;i<fsize;i++){
+		if(mem[i][index]==-1){
 			loc = i;
 			break;
 		}
@@ -136,7 +138,7 @@ int load_init(int index)
 	//printf("\n Space availabe at loc: %d",loc);
 	return loc;	
 }
-
+/*
 int fetch_mem(int index){
 	int i,j,loc=0;
 	for(i=4;i<8;i++){
@@ -152,19 +154,13 @@ int fetch_mem(int index){
 		return 0;
 }
 */
-int check_cache(int index){
-	int i,j,stat;
-	for(i=0;i<4;i++){
-		if(mem[i][index]==ref_string[index]){
+int check_cache(int mem[][ITERATIONS+1],int index,int fsize,int curr_page){
+	int i,j,stat=0;
+	for(i=0;i<fsize;i++){
+		if(mem[i][index]==curr_page){
 			stat = 1; //present in cache
 			break;
 		}
-		else if(mem[i][index]==9){
-			stat = 2; //miss but space available
-			break;
-		}	
-		else
-			stat = 0;  //need to fetch from mem
 	}
 	//printf("\n Cache status returned");
 	return stat;
@@ -242,130 +238,159 @@ void second(){
 }
 */
 void fifo(int f_size){
-	int i,j,load,hit,a,b,load_ind,max_age,age_ind,rst_age;
+	int i,j,load,hit,a,b,load_ind,max_age,age_ind,rst_age,f_fault_count=0;
 	int memory_blk[f_size][ITERATIONS+1];
     int age[RAND_LIMIT];
+	int fault_fifo[ITERATIONS];
     for(i=0;i<RAND_LIMIT;i++)
         age[i] = 0;
     for(i=0;i<f_size;i++)
   	    for(j=0;j<(ITERATIONS+1);j++)
 		    memory_blk[i][j] = -1;
 	FILE *fp;
-    fp = fopen("ref_string.txt","r");
+    fp = fopen(ip_file,"r");
     if(fp==NULL){
 	    perror("Error reading ref string \n");
 	    exit(EXIT_FAILURE);
     }
     for(i=0;i<ITERATIONS;i++){
-		//load = ref_string[i];
         fscanf(fp,"%d,",&load);
         printf("\n Loaded page at %d iteration: %d",(i+1),load);
-    }
 		for(j=0;j<f_size;j++){
 			age_ind = memory_blk[j][i];
+			//printf("\n Value of age_index: %d",age_ind);
 			if(age_ind!=-1)
                 age[age_ind]++;
 		}
-	printf("\n Age Array\n");
-    for(j=0;j<RAND_LIMIT;j++)
-        printf("%d  ",age[j]);
-    printf("\n Need page %d at time %d",ref_string[i],i);
-    hit = check_cache(i);
-	// 	printf("\n Cache stat: %d",hit);
-	// 	//sleep(1);
-	// 	if(hit==1){
-	// 		fault[i]=1;
-	// 		for(j=0;j<8;j++)
-	// 			mem[j][i+1] = mem[j][i];
+		//printf("\n Need page %d at time %d",load,i);
+		hit = check_cache(memory_blk,i,f_size,load);
+		//printf("\n Cache stat: %d",hit);
+		if(hit==1){
+			printf("\n Cache hit");
+			fault_fifo[i]=0;
+			for(j=0;j<f_size;j++)
+				memory_blk[j][i+1] = memory_blk[j][i];
+		}
+		if(hit==0){
+			printf("\n Cache miss");
+			fault_fifo[i]=1;
+			f_fault_count++;
+			load_ind = load_init(memory_blk,i,f_size,load);
+			if(load_ind==-1){
+				//printf("\n Space not available");
+				max_age = ret_max(memory_blk,age,i,f_size);
+				rst_age = memory_blk[max_age][i];
+				age[rst_age] = 0;
+				for(j=0;j<f_size;j++)
+					memory_blk[j][i+1] = memory_blk[j][i];
+				memory_blk[max_age][i+1] = load;
+			}
+			else{
+				//printf("\n Space available at location: %d",load_ind);
+				for(j=1;j<=load_ind;j++)
+					memory_blk[j][i+1] = memory_blk[j-1][i];
+				memory_blk[0][i+1] = load;	
+			}
+
+		}
+		// printf("\n Memory State \n");
+	  	// for(a=0;a<f_size;a++){
+		// 	for(b=0;b<=(i+1);b++){
+		// 		if(memory_blk[a][b]==-1)
+		// 			printf(" - ");
+		// 		else
+		// 			printf(" %d ",memory_blk[a][b]);
+		// 	}
+	  	// 	printf("\n");
+  		// }
+	}
+	fclose(fp);
+	printf("\n Total number of page faults: %d",f_fault_count);
+	if(f_size==4){
+		fp = fopen(file_4,"a");
+		if(fp==NULL){
+			perror("Error wrting result fifo4--");
+			exit(EXIT_FAILURE);
+		}
+		fprintf(fp,"Total Page Faults for FIFO: %d\n",f_fault_count);
+		fclose(fp);
+	}
+	else if(f_size==8){
+		fp = fopen(file_8,"a");
+		if(fp==NULL){
+			perror("Error wrting result fifo8--");
+			exit(EXIT_FAILURE);
+		}
+		fprintf(fp,"Total Page Faults for FIFO: %d\n",f_fault_count);
+		fclose(fp);
+	}
+}
+
+void lru(int f_size){
+
+	int load,a,b,i=0,j=0,mem_loc, hit,hit_ind,load_ind,mem_ind;
+	int memory_blk[f_size][ITERATIONS+1];
+	int fault_lru[ITERATIONS];
+    for(i=0;i<f_size;i++)
+  	    for(j=0;j<(ITERATIONS+1);j++)
+		    memory_blk[i][j] = -1;
+	FILE *fp;
+    fp = fopen(ip_file,"r");
+    if(fp==NULL){
+	    perror("Error reading ref string \n");
+	    exit(EXIT_FAILURE);
+    }
+	for(i=0;i<ITERATIONS;i++){
+		fscanf(fp,"%d,",&load);
+		printf("\n Loaded page at %d iteration: %d",(i+1),load);
+		hit = check_cache(memory_blk,i,f_size,load);
+		if(hit==1){
+			printf("\n Cache hit");
+			fault_lru[i]=0;
+		}
+	// 	if(hit==0){
+	// 		fault[i] = 0;
+	// 		printf("\n No space;  Fetching from memory");
+	// 		mem_loc = check_2mem(i);
+	// 		printf("\n Present at location %d",mem_loc);
+	// 		if(mem_loc==0){
+	// 			for(j=1;j<8;j++)
+	// 				mem[j][i+1] = mem[j-1][i];
 	// 		}
+	// 		else{
+	// 			for(j=1;j<=mem_loc;j++)
+	// 				mem[j][i+1] = mem[j-1][i];
+	// 			for(j=(mem_loc+1);j<8;j++)
+	// 				mem[j][i+1] = mem[j][i];
+	// 		}
+	// 		mem[0][i+1] = ref_string[i];
+			
+	// 	}
+	// 	else if(hit==1){
+	// 		fault[i] = 1;
+	// 		hit_ind = hit_loc(i);
+	// 		printf("\n Cache hit at %d",hit_ind);
+	// 		for(j=1;j<=hit_ind;j++){
+	// 			mem[j][i+1] = mem[j-1][i];
+	// 			printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
+	// 		}
+	// 		mem[0][i+1] = ref_string[i];
+	// 		for(j=(hit_ind+1);j<8;j++)
+	// 			mem[j][i+1] = mem[j][i];
+	// 	}
 	// 	else if(hit==2){
 	// 		fault[i] = 0;
 	// 		printf("\n Cache miss but space available");
 	// 		load_ind = load_init(i);
 	// 		for(j=1;j<=load_ind;j++){
-	// 		mem[j][i+1] = mem[j-1][i];
-	// 		//printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
-	// 	}
-	// 		mem[0][i+1] = ref_string[i];
-			
-	// 	}
-	// 	else if(hit==0){
-	// 		fault[i] = 0;
-	// 		printf("\n No space;  Fetching from memory");
-	// 		max_age = ret_max(age,i);
-	// 		rst_age = mem[max_age][i];
-	// 		age[rst_age]=0;
-	// 		for(j=0;j<8;j++)
-	// 			mem[j][i+1] = mem[j][i];
-	// 		printf("\n Pushing %d to 2nd mem",mem[max_age][i]);		
-	// 		push_2mem(max_age,i);
-	// 		mem[max_age][i+1] = ref_string[i];
+	// 			mem[j][i+1] = mem[j-1][i];
+	// 			printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
+	// 		}
+	// 		mem[0][i+1] = ref_string[i];	
 	// 	}
 	// }
 }
-/*
-void lru(){
-
-	int load,a,b,i=0,j=0,mem_loc, hit,hit_ind,load_ind,mem_ind;
-	for(i=0;i<24;i++){
-		load = ref_string[i];
-		printf("\n Memory State \n   ");
-	  	for(a=0;a<24;a++)
-			printf(" %d ",ref_string[a]);
-	  	printf("\n");
-	  	for(a=0;a<8;a++){
-			for(b=0;b<25;b++)
-				printf(" %d ",mem[a][b]);
-	  	printf("\n");
-  		}
-		printf("\n Need page %d at time %d",ref_string[i],i);
-		hit = check_cache(i);
-		printf("\n Cache stat: %d",hit);
-		//sleep(1);
-		if(hit==0){
-			fault[i] = 0;
-			printf("\n No space;  Fetching from memory");
-			mem_loc = check_2mem(i);
-			printf("\n Present at location %d",mem_loc);
-			if(mem_loc==0){
-				for(j=1;j<8;j++)
-					mem[j][i+1] = mem[j-1][i];
-			}
-			else{
-				for(j=1;j<=mem_loc;j++)
-					mem[j][i+1] = mem[j-1][i];
-				for(j=(mem_loc+1);j<8;j++)
-					mem[j][i+1] = mem[j][i];
-			}
-			mem[0][i+1] = ref_string[i];
-			
-		}
-		else if(hit==1){
-			fault[i] = 1;
-			hit_ind = hit_loc(i);
-			printf("\n Cache hit at %d",hit_ind);
-			for(j=1;j<=hit_ind;j++){
-				mem[j][i+1] = mem[j-1][i];
-				printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
-			}
-			mem[0][i+1] = ref_string[i];
-			for(j=(hit_ind+1);j<8;j++)
-				mem[j][i+1] = mem[j][i];
-		}
-		else if(hit==2){
-			fault[i] = 0;
-			printf("\n Cache miss but space available");
-			load_ind = load_init(i);
-			for(j=1;j<=load_ind;j++){
-				mem[j][i+1] = mem[j-1][i];
-				printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
-			}
-			mem[0][i+1] = ref_string[i];	
-		}
-	}
-}
-*/
-int main(void) {
+int main(void){
   int frame_choice,alg_choice,rand_string;
   int i,j;
   time_t t;
@@ -376,7 +401,7 @@ int main(void) {
   printf("\n Enter the number of page frames [4 or 8]:");
   scanf("%d",&frame_choice);
   FILE *fp;
-  fp = fopen("ref_string.txt","a+");
+  fp = fopen(ip_file,"w");
   if(fp==NULL){
 	  perror("Error opening file to write\n");
 	  exit(EXIT_FAILURE);
@@ -388,58 +413,17 @@ int main(void) {
   }
   fclose(fp);
   switch(alg_choice){
-	  case 1: printf("\n \t\tImplementing FIFO\n");
-		  	  fifo(frame_choice);
-	  break;
-	//   case 2: printf("\n \t\tImplementing LRU\n");
-	// 	  	  lru();
-	//   break;
+		case 1: printf("\n \t\tImplementing FIFO\n");
+				fifo(frame_choice);
+		break;
+		case 2: printf("\n \t\tImplementing LRU\n");
+    			lru(frame_choice);
+		break;
 	//   case 3: printf("\n \t\tImplementing Second Chance\n");
 	// 		  second();
 	//  break;
 	  default:printf("\n Invalid entry. Please enter a number in range [1,3]\n");
 	  exit(0);
-  }
-  /*int mem[page_size][iterations+1];
-  for(i=0;i<8;i++)
-  	for(j=0;j<25;j++)
-		mem[i][j] = 9;
-  
-  FILE *fp;
-  fp = fopen("ref_string.txt","r");
-  if(fp==NULL){
-	  perror("Error reading ref string\n");
-	  exit(0);
-  }
-  for(i=0;i<24;i++){
-	  fscanf(fp,"%d,",&ref_string[i]);
-  }
-  switch(choice){
-	  case 1: printf("\n \t\tImplementing FIFO\n");
-		  	  fifo();
-	  break;
-	  case 2: printf("\n \t\tImplementing LRU\n");
-		  	  lru();
-	  break;
-	  case 3: printf("\n \t\tImplementing Second Chance\n");
-			  second();
-	  break;
-	  default:printf("\n Invalid entry. Please enter a number in range [1,3]\n");
-	  exit(0);
-  }
-  //displaying mem sys
-  printf("\n Memory State \n   ");
-  for(i=0;i<24;i++)
-	  printf(" %d ",ref_string[i]);
-  printf("\n");
-  for(i=0;i<8;i++){
-  	for(j=0;j<25;j++)
-		printf(" %d ",mem[i][j]);
-  printf("\n");	  
-  }
-  printf("Status \n   ");	
-  for(i=0;i<24;i++)
-	  printf(" %d ",fault[i]);
-  */    
+  }    
   return 0;
 }

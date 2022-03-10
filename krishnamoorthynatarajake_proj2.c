@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define ITERATIONS 100
-#define RAND_LIMIT 16
+#define RAND_LIMIT 10
 const char file_4[] = "krishnamoorthynatarajanke_proj2_output_4frames.txt";
 const char file_8[] = "krishnamoorthynatarajanke_proj2_output_8frames.txt";
 const char ip_file[] = "krishnamoorthynatarajanke_proj2_input.txt";
@@ -16,6 +16,7 @@ void lru(int);
 int check_cache(int mem[][ITERATIONS+1], int,int,int);
 int load_init(int mem[][ITERATIONS+1], int,int,int);
 int ret_max(int mem[][ITERATIONS+1], int age[],int,int);
+int hit_loc(int mem[][ITERATIONS+1], int,int,int);
 
 /*
 void second();
@@ -23,7 +24,7 @@ void second();
 
 int fetch_mem(int);
 
-int hit_loc(int);
+
 int check_2mem(int);
 int ret_max(int age[],int);
 void push_2mem(int, int);
@@ -113,18 +114,19 @@ int check_2mem(int index){
 		}
 	return loc;
 	
-	}
-int hit_loc(int index){
-	int i,loc;
-	for(i=0;i<4;i++){
-		if(mem[i][index]==ref_string[index]){
+}
+*/
+int hit_loc(int mem[][ITERATIONS+1],int index,int fsize,int curr_page){
+	int i,loc=-1;
+	for(i=0;i<fsize;i++){
+		if(mem[i][index]== curr_page){
 			loc = i;
 			break;
 		}
 	}
 	return loc;
 }
-*/
+
 //check for space in cache and return index
 int load_init(int mem[][ITERATIONS+1],int index,int fsize,int curr_page)
 {
@@ -165,78 +167,77 @@ int check_cache(int mem[][ITERATIONS+1],int index,int fsize,int curr_page){
 	//printf("\n Cache status returned");
 	return stat;
 }
-/*
-void second(){
-	int age[8] = {0};
-	int i,j,load,hit,a,b,load_ind,max_age,age_ind,rst_age;
 
-	for(i=0;i<8;i++)
-		ref_bit[i]= -1;	
-	for(i=0;i<24;i++){
-		printf("\n Memory State \n   ");
-	  	for(a=0;a<i;a++)
-			printf(" %d ",ref_string[a]);
-	  	printf("\n");
-	  	for(a=0;a<8;a++){
-			for(b=0;b<(i+1);b++)
-				printf(" %d ",mem[a][b]);
-	  	printf("\n");
-  		}
-		load = ref_string[i];
-		//printf("\n Load: %d",load);
-		if((ref_bit[load]==0)||(ref_bit[load]==1))
-			ref_bit[load] = 1;
-		else if (ref_bit[load]==-1)
-			ref_bit[load]++;
-		//increasing age of the page
-		for(j=0;j<4;j++){
-			age_ind = mem[j][i];
-			age[age_ind]++;
-			}
-		printf("\n Need page %d at time %d",ref_string[i],i);
-		hit = check_cache(i);
-		printf("\n Cache stat: %d",hit);
-		sleep(1);
-		if(hit==1){
-			fault[i]=1;
-			for(j=0;j<8;j++)
-				mem[j][i+1] = mem[j][i];
-			}
-		else if(hit==2){
-			fault[i] = 0;
-			printf("\n Cache miss but space available");
-			load_ind = load_init(i);
-			for(j=1;j<=load_ind;j++){
-			mem[j][i+1] = mem[j-1][i];
-			//printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
-		}
-			mem[0][i+1] = ref_string[i];
+// void second(){
+// 	int age[8] = {0};
+// 	int i,j,load,hit,a,b,load_ind,max_age,age_ind,rst_age;
+
+// 	for(i=0;i<8;i++)
+// 		ref_bit[i]= -1;	
+// 	for(i=0;i<24;i++){
+// 		printf("\n Memory State \n   ");
+// 	  	for(a=0;a<i;a++)
+// 			printf(" %d ",ref_string[a]);
+// 	  	printf("\n");
+// 	  	for(a=0;a<8;a++){
+// 			for(b=0;b<(i+1);b++)
+// 				printf(" %d ",mem[a][b]);
+// 	  	printf("\n");
+//   		}
+// 		load = ref_string[i];
+// 		//printf("\n Load: %d",load);
+// 		if((ref_bit[load]==0)||(ref_bit[load]==1))
+// 			ref_bit[load] = 1;
+// 		else if (ref_bit[load]==-1)
+// 			ref_bit[load]++;
+// 		//increasing age of the page
+// 		for(j=0;j<4;j++){
+// 			age_ind = mem[j][i];
+// 			age[age_ind]++;
+// 			}
+// 		printf("\n Need page %d at time %d",ref_string[i],i);
+// 		hit = check_cache(i);
+// 		printf("\n Cache stat: %d",hit);
+// 		sleep(1);
+// 		if(hit==1){
+// 			fault[i]=1;
+// 			for(j=0;j<8;j++)
+// 				mem[j][i+1] = mem[j][i];
+// 			}
+// 		else if(hit==2){
+// 			fault[i] = 0;
+// 			printf("\n Cache miss but space available");
+// 			load_ind = load_init(i);
+// 			for(j=1;j<=load_ind;j++){
+// 			mem[j][i+1] = mem[j-1][i];
+// 			//printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
+// 		}
+// 			mem[0][i+1] = ref_string[i];
 			
-		}
-		else if(hit==0){
-			fault[i] = 0;
-			printf("\n No space;  Fetching from memory");
-			//max_age = ret_max(age,i);
-			max_age  = age_n_ref(age,ref_bit,i);
-			rst_age = mem[max_age][i];
-			age[rst_age]=0;
-			for(j=0;j<8;j++)
-				mem[j][i+1] = mem[j][i];
-			printf("\n Pushing %d to 2nd mem",mem[max_age][i]);		
-			push_2mem(max_age,i);
-			ref_bit[mem[max_age][i]]=-1;
-			mem[max_age][i+1] = ref_string[i];
-		}
-		printf("\n Age Array\n");
-		for(j=0;j<8;j++)
-			printf("%d  ",age[j]);
-		printf("\n Ref Array\n");
-		for(j=0;j<8;j++)
-			printf("%d  ",ref_bit[j]);
-	}
+// 		}
+// 		else if(hit==0){
+// 			fault[i] = 0;
+// 			printf("\n No space;  Fetching from memory");
+// 			//max_age = ret_max(age,i);
+// 			max_age  = age_n_ref(age,ref_bit,i);
+// 			rst_age = mem[max_age][i];
+// 			age[rst_age]=0;
+// 			for(j=0;j<8;j++)
+// 				mem[j][i+1] = mem[j][i];
+// 			printf("\n Pushing %d to 2nd mem",mem[max_age][i]);		
+// 			push_2mem(max_age,i);
+// 			ref_bit[mem[max_age][i]]=-1;
+// 			mem[max_age][i+1] = ref_string[i];
+// 		}
+// 		printf("\n Age Array\n");
+// 		for(j=0;j<8;j++)
+// 			printf("%d  ",age[j]);
+// 		printf("\n Ref Array\n");
+// 		for(j=0;j<8;j++)
+// 			printf("%d  ",ref_bit[j]);
+// 	}
 	
-}
-*/
+// }
 void fifo(int f_size){
 	int i,j,load,hit,a,b,load_ind,max_age,age_ind,rst_age,f_fault_count=0;
 	int memory_blk[f_size][ITERATIONS+1];
@@ -328,7 +329,7 @@ void fifo(int f_size){
 
 void lru(int f_size){
 
-	int load,a,b,i=0,j=0,mem_loc, hit,hit_ind,load_ind,mem_ind;
+	int load,a,b,i=0,j=0,mem_loc, hit,hit_ind,load_ind,mem_ind,l_fault_count=0;
 	int memory_blk[f_size][ITERATIONS+1];
 	int fault_lru[ITERATIONS];
     for(i=0;i<f_size;i++)
@@ -340,55 +341,47 @@ void lru(int f_size){
 	    perror("Error reading ref string \n");
 	    exit(EXIT_FAILURE);
     }
-	for(i=0;i<ITERATIONS;i++){
+	for(i=0;i<20;i++){
 		fscanf(fp,"%d,",&load);
 		printf("\n Loaded page at %d iteration: %d",(i+1),load);
 		hit = check_cache(memory_blk,i,f_size,load);
 		if(hit==1){
 			printf("\n Cache hit");
 			fault_lru[i]=0;
+			hit_ind = hit_loc(memory_blk,i,f_size,load);
+			for(j=1;j<=hit_ind;j++)
+ 				memory_blk[j][i+1] = memory_blk[j-1][i];
+			for(j=(hit_ind+1);j<f_size;j++)
+				memory_blk[j][i+1] = memory_blk[j][i]; 
+			memory_blk[0][i+1] = load;
 		}
-	// 	if(hit==0){
-	// 		fault[i] = 0;
-	// 		printf("\n No space;  Fetching from memory");
-	// 		mem_loc = check_2mem(i);
-	// 		printf("\n Present at location %d",mem_loc);
-	// 		if(mem_loc==0){
-	// 			for(j=1;j<8;j++)
-	// 				mem[j][i+1] = mem[j-1][i];
-	// 		}
-	// 		else{
-	// 			for(j=1;j<=mem_loc;j++)
-	// 				mem[j][i+1] = mem[j-1][i];
-	// 			for(j=(mem_loc+1);j<8;j++)
-	// 				mem[j][i+1] = mem[j][i];
-	// 		}
-	// 		mem[0][i+1] = ref_string[i];
-			
-	// 	}
-	// 	else if(hit==1){
-	// 		fault[i] = 1;
-	// 		hit_ind = hit_loc(i);
-	// 		printf("\n Cache hit at %d",hit_ind);
-	// 		for(j=1;j<=hit_ind;j++){
-	// 			mem[j][i+1] = mem[j-1][i];
-	// 			printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
-	// 		}
-	// 		mem[0][i+1] = ref_string[i];
-	// 		for(j=(hit_ind+1);j<8;j++)
-	// 			mem[j][i+1] = mem[j][i];
-	// 	}
-	// 	else if(hit==2){
-	// 		fault[i] = 0;
-	// 		printf("\n Cache miss but space available");
-	// 		load_ind = load_init(i);
-	// 		for(j=1;j<=load_ind;j++){
-	// 			mem[j][i+1] = mem[j-1][i];
-	// 			printf("\n Pushing val %d from %d to %d at time %d",mem[j][i+1],j-1,j,i);
-	// 		}
-	// 		mem[0][i+1] = ref_string[i];	
-	// 	}
-	// }
+		else if(hit==0){
+			printf("\n Cache miss");
+			fault_lru[i]=1;
+			l_fault_count++;
+			load_ind = load_init(memory_blk,i,f_size,load);
+			if(load_ind==-1){
+				for(j=1;j<f_size;j++)
+					memory_blk[j][i+1]=memory_blk[j-1][i];
+			}
+			else{
+				for(j=1;j<=load_ind;j++)
+					memory_blk[j][i+1]=memory_blk[j-1][i];
+			}
+			memory_blk[0][i+1] = load;
+		}
+		printf("\n Memory State \n");
+			for(a=0;a<f_size;a++){
+				for(b=0;b<=(i+1);b++){
+					if(memory_blk[a][b]==-1)
+						printf(" - ");
+					else
+						printf(" %d ",memory_blk[a][b]);
+				}
+				printf("\n");
+			}
+	}
+	printf("\n Total number of page faults: %d",l_fault_count);
 }
 int main(void){
   int frame_choice,alg_choice,rand_string;

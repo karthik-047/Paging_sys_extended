@@ -1,12 +1,12 @@
-TARGET = krishnamoorthynatarajanke_proj2.exe
-SRC = krishnamoorthynatarajanke_proj2.c
-INC = krishnamoorthynatarajanke_proj2.h
+TARGET = paging_sys
+SRC = paging_sys.c
+INC = paging_sys.h
 HELPER = helper_fn.c
 CC = gcc
 
 all: $(TARGET)
 
-krishnamoorthynatarajanke_proj2.exe: $(SRC) $(INC) $(HELPER)
+paging_sys: $(SRC) $(INC) $(HELPER)
 	$(CC) -o $(TARGET) $(SRC) $(HELPER)
 	
 

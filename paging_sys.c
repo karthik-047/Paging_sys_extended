@@ -1,9 +1,9 @@
-#include "krishnamoorthynatarajanke_proj2.h"
+#include "paging_sys.h"
 
 //filenames
-char file_4[50] = "krishnamoorthynatarajanke_proj2_output_4frames.txt";
-char file_8[50] = "krishnamoorthynatarajanke_proj2_output_8frames.txt";
-char ip_file[50] = "krishnamoorthynatarajanke_proj2_input.txt";
+char file_4[50] = "paging_sys_output_4frames.txt";
+char file_8[50] = "paging_sys_output_8frames.txt";
+char ip_file[50] = "paging_sys_input.txt";
 
 
 //second chance

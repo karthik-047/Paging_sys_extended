@@ -17,14 +17,14 @@ Overview:
 
 Files:
 
-    krishnamoorthynatarajanke_proj2.h - Header files with function declarations and Macros.
-    krishnamoorthynatarajanke_proj2.c - Main source code with the replacement algorithms.
+    paging_sys.h - Header files with function declarations and Macros.
+    paging_sys.c - Main source code with the replacement algorithms.
     helper_fn.c - Source code containing helper functions for the main functions.
     makefile - The recipe for compiling the source code with appropriate dependencies.
-    krishnamoorthynatarajanke_proj2.exe - The executable generated after compilation.
-    krishnamoorthynatarajanke_proj2_input.txt - Input file containing randomnly generated page calls.
-    krishnamoorthynatarajanke_proj2_output_8frames.txt - Output file for storing page faults for all algorithms for frame_size = 4.
-    krishnamoorthynatarajanke_proj2 - Output file for storing page faults for all algorithms for frame_size = 8.
+    paging_sys.exe - The executable generated after compilation.
+    paging_sys_input.txt - Input file containing randomnly generated page calls.
+    paging_sys_output_8frames.txt - Output file for storing page faults for all algorithms for frame_size = 4.
+    paging_sys - Output file for storing page faults for all algorithms for frame_size = 8.
 
 Compilation:
 
@@ -33,7 +33,7 @@ Compilation:
 
 Usage:
 
-    - ./krishnamoorthynatarajanke_proj2.exe
+    - ./paging_sys.exe
     - Choose the options:
         1 for FIFO
         2 for LRU

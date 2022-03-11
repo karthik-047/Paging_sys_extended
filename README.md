@@ -27,6 +27,7 @@ Files:
     krishnamoorthynatarajanke_proj2 - Output file for storing page faults for all algorithms for frame_size = 8.
 
 Compilation:
+
     - make/make all: Generate the executable file.
     - make clean: Delete the executable file znd the generated text files.
 

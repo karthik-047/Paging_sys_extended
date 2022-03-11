@@ -29,11 +29,11 @@ Files:
 Compilation:
 
     - make/make all: Generate the executable file.
-    - make clean: Delete the executable file znd the generated text files.
+    - make clean: Delete the executable file and the generated text files.
 
 Usage:
 
-    - ./krishnamoorthynatarajanke_exam1.exe
+    - ./krishnamoorthynatarajanke_proj2.exe
     - Choose the options:
         1 for FIFO
         2 for LRU

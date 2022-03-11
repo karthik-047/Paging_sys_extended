@@ -32,6 +32,7 @@ Compilation:
     - make clean: Delete the executable file znd the generated text files.
 
 Usage:
+
     - ./krishnamoorthynatarajanke_exam1.exe
     - Choose the options:
         1 for FIFO
